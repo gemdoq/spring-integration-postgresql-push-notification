@@ -1,0 +1,29 @@
+CREATE TABLE tb_outbox
+(
+    id           VARCHAR(40) PRIMARY KEY,
+    event_type   VARCHAR(255) NOT NULL,
+    payload      TEXT         NOT NULL,
+    status       VARCHAR(50) DEFAULT 'PENDING',
+    created_dttm TIMESTAMP   DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE _spring_integration_channel_message
+(
+    REGION           VARCHAR(100) NOT NULL,
+    GROUP_KEY        VARCHAR(100) NOT NULL,
+    MESSAGE_ID       VARCHAR(40)       NOT NULL,
+    CREATED_DATE     TIMESTAMP    NOT NULL,
+    PRIORITY         INTEGER,
+    MESSAGE_BYTES    BYTEA        NOT NULL,
+    MESSAGE_SEQUENCE BIGINT       DEFAULT 1,
+    MESSAGE_PRIORITY INTEGER,
+    PRIMARY KEY (REGION, GROUP_KEY, MESSAGE_ID)
+);
+
+CREATE TABLE _spring_integration_message
+(
+    MESSAGE_ID    VARCHAR(40)    NOT NULL,
+    CREATED_DATE  TIMESTAMP NOT NULL,
+    MESSAGE_BYTES BYTEA     NOT NULL,
+    PRIMARY KEY (MESSAGE_ID)
+);
