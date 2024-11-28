@@ -1,0 +1,80 @@
+package com.springboot.springintegrationpostgresqlpushnotification.global.util.mail;
+
+import com.springboot.springintegrationpostgresqlpushnotification.domain.notification.data.repository.OutboxRepository;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.channel.QueueChannel;
+import org.springframework.integration.dsl.IntegrationFlow;
+import org.springframework.integration.dsl.MessageChannels;
+import org.springframework.integration.dsl.Pollers;
+import org.springframework.integration.handler.LoggingHandler;
+import org.springframework.integration.jdbc.store.JdbcChannelMessageStore;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.support.ChannelInterceptor;
+
+import java.time.Duration;
+
+@Configuration
+public class MailConfiguration {
+	private final OutboxRepository outboxRepository;
+
+	public MailConfiguration(OutboxRepository outboxRepository) {
+		this.outboxRepository = outboxRepository;
+	}
+
+	@Bean
+	public DirectChannel inbox() {
+		return new DirectChannel();
+	}
+
+	@Bean
+	public QueueChannel outbox(JdbcChannelMessageStore store) {
+		QueueChannel channel = MessageChannels.queue(store, "mail-outbox").getObject();
+		channel.addInterceptor(new ChannelInterceptor() {
+			@Override
+			public Message<?> preSend(Message<?> message, MessageChannel channel) {
+				System.out.println("========================");
+				System.out.println("Message Headers: " + message.getHeaders());
+
+				Object messageId = message.getHeaders().get("MESSAGE_ID");
+				Object createdDate = message.getHeaders().get("CREATED_DATE");
+
+				System.out.println("MESSAGE_ID: " + messageId);
+				System.out.println("MESSAGE_ID 타입: " + (messageId != null ? messageId.getClass() : "null"));
+				System.out.println("CREATED_DATE: " + createdDate);
+				System.out.println("CREATED_DATE 타입: " + (createdDate != null ? createdDate.getClass() : "null"));
+				System.out.println("========================");
+				return message;
+			}
+		});
+		return channel;
+	}
+
+	@Bean
+	public IntegrationFlow mailFlow(JdbcChannelMessageStore store, MailSender mailSender) {
+		return IntegrationFlow.from(inbox())
+				.log(LoggingHandler.Level.INFO, message -> "수신된 메시지: " + message)
+				.channel(outbox(store))
+				.handle(message -> {
+					MailMessage mail = (MailMessage) message.getPayload();
+					String messageId = message.getHeaders().get("MESSAGE_ID").toString();
+					try {
+						mailSender.sendMail(mail);	// 메일 전송 시도
+						outboxRepository.updateStatus(messageId, "PROCESSED");	// 성공 시 상태 업데이트
+						System.out.println("메시지가 성공적으로 처리되었습니다" + messageId);
+					} catch (MailSendException e) {
+						// MailSendException 처리
+						outboxRepository.updateStatus(messageId, "FAILED");
+						System.out.println("메일 전송 에러 발생" + e.getMessage());
+					} catch (Exception e) {
+						// 기타 예외 처리
+						outboxRepository.updateStatus(messageId, "FAILED");
+						System.out.println("기타 에러 발생" + e.getMessage());
+						throw e; // 다른 처리 로직으로 예외 전달
+					}
+				}, e -> e.poller(Pollers.fixedDelay(Duration.ofSeconds(1)).transactional()))
+				.get();
+	}
+}
