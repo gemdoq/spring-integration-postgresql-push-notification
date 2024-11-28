@@ -3,7 +3,6 @@ package com.springboot.springintegrationpostgresqlpushnotification.global.common
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.jdbc.store.JdbcChannelMessageStore;
-import org.springframework.integration.jdbc.store.channel.PostgresChannelMessageStoreQueryProvider;
 
 import javax.sql.DataSource;
 
@@ -14,8 +13,8 @@ public class SpringIntegrationConfiguration {
 	@Bean
 	JdbcChannelMessageStore jdbcChannelMessageStore(DataSource dataSource) {
 		JdbcChannelMessageStore store = new JdbcChannelMessageStore(dataSource);
-		store.setTablePrefix("_spring_integration_");
-		store.setChannelMessageStoreQueryProvider(new PostgresChannelMessageStoreQueryProvider());
+		store.setTablePrefix(METADATA_PREFIX);
+		store.setChannelMessageStoreQueryProvider(new CustomPostgresChannelMessageStoreQueryProvider());
 		return store;
 	}
 }
