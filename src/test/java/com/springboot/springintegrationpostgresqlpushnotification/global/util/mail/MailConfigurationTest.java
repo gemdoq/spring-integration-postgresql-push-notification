@@ -55,7 +55,7 @@ class MailConfigurationTest {
 	}
 
 	@Test
-	@DisplayName("Is the outbox being saved correctly through the repository")
+	@DisplayName("are mail messages successfully enqueued into the outbox queue")
 	void testMailEnqueue() {
 		mailGateway.enqueueMailEvent(message);
 
@@ -67,7 +67,7 @@ class MailConfigurationTest {
 	}
 
 	@Test
-	@DisplayName("Is the outbox being saved correctly through the repository")
+	@DisplayName("is entire mail processing integration flow correctly inbox to outbox")
 	void testIntegrationFlow() {
 		inbox.send(message);
 
@@ -76,6 +76,8 @@ class MailConfigurationTest {
 
 		MailMessage receivedMail = (MailMessage) receivedMessage.getPayload();
 		assert receivedMail.subject().equals("Test Subject");
+		assert receivedMail.body().equals("Test Body");
+		assert receivedMail.to().equals("test@example.com");
 
 		Mockito.doNothing().when(mailSender).sendMail(receivedMail);
 	}
