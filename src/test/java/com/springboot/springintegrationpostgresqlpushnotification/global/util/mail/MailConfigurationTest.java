@@ -64,6 +64,8 @@ class MailConfigurationTest {
 		assertThat(received.getPayload()).isInstanceOf(MailMessage.class);
 		MailMessage receivedMail = (MailMessage) received.getPayload();
 		assertThat(receivedMail.subject()).isEqualTo("Test Subject");
+		assertThat(receivedMail.body()).isEqualTo("Test Body");
+		assertThat(receivedMail.to()).isEqualTo("test@example.com");
 	}
 
 	@Test
