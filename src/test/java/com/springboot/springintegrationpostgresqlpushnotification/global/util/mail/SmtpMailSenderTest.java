@@ -16,7 +16,7 @@ class SmtpMailSenderTest {
 	private final SmtpMailSender smtpMailSender = new SmtpMailSender(javaMailSender);
 
 	@Test
-	@DisplayName("Is the outbox being saved correctly through the repository")
+	@DisplayName("Is the sendMail method sending an email successfully?")
 	void testSendMail() {
 		MailMessage mailMessage = new MailMessage("Test Subject", "Test Body", "test@example.com");
 		smtpMailSender.sendMail(mailMessage);
