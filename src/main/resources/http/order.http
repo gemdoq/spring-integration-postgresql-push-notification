@@ -1,0 +1,20 @@
+### simple java mail send
+POST {{host}}/api/v1/order/new
+Content-Type: application/json
+
+{
+  "amount": {{amount[0]}},
+  "email": "{{email}}"
+}
+
+### simple mail send with thymeleaf template engine
+GET {{host}}/send-email?to={{email}}&name={{name}}&code={{code}}
+
+### order success mail send with thymeleaf template engine
+POST {{host}}/api/v1/order/new2
+Content-Type: application/json
+
+{
+"amount": {{amount[1]}},
+"email": "{{email}}"
+}
