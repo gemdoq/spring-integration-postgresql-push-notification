@@ -36,6 +36,7 @@ dependencies {
     implementation 'org.springframework.integration:spring-integration-jdbc'
     implementation 'org.springframework.integration:spring-integration-jpa'
     implementation 'org.springframework.integration:spring-integration-mail'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.integration:spring-integration-test'
