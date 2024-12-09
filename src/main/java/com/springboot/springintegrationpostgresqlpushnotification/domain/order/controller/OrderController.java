@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 
 @RestController
@@ -34,5 +35,13 @@ public class OrderController {
 		String email = orderRequestDto.getEmail();
 		String name = email.substring(0, email.indexOf("@"));
 		orderService.saveOrder2(name, amount, email);
+	}
+
+	@PostMapping("/new3")
+	public void acceptOrder3(@RequestBody OrderRequestDto orderRequestDto) throws IOException {
+		BigDecimal amount = orderRequestDto.getAmount();
+		String email = orderRequestDto.getEmail();
+		String name = email.substring(0, email.indexOf("@"));
+		orderService.saveOrder3(name, amount, email);
 	}
 }
