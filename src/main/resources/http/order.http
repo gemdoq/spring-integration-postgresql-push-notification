@@ -18,3 +18,12 @@ Content-Type: application/json
 "amount": {{amount[1]}},
 "email": "{{email}}"
 }
+
+### order success mail send with thymeleaf template engine
+POST {{host}}/api/v1/order/new3
+Content-Type: application/json
+
+{
+"amount": {{amount[3]}},
+"email": "{{email}}"
+}
