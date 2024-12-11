@@ -60,7 +60,7 @@ public class MailFlowRetryTest {
 	}
 
 	@Test
-	@DisplayName("Test if retries occur when email transmission fails")
+	@DisplayName("Test if email transmission succeeds on retry")
 	public void testMailRetryAndSuccessHandling() throws Exception {
 		// Given: Mock된 Outbox와 MailSender
 		String messageId = "success-message-id";
