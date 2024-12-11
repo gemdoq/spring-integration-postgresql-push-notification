@@ -20,7 +20,7 @@ public class OutboxCleanup {
 	@Transactional
 	public void cleanupOldFailedMessages() {
 		int deletedCount = outboxRepository.deleteOldFailedMessages(
-				Timestamp.valueOf(LocalDateTime.now().minusDays(7))
+				Timestamp.valueOf(LocalDateTime.now().minusDays(30))
 		);
 		System.out.println("오래된 실패 메시지 삭제 완료. 삭제된 메시지 수: " + deletedCount);
 	}
