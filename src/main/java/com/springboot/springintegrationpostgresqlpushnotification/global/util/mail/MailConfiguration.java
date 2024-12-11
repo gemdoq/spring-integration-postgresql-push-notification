@@ -1,6 +1,7 @@
 package com.springboot.springintegrationpostgresqlpushnotification.global.util.mail;
 
 import com.springboot.springintegrationpostgresqlpushnotification.domain.notification.data.repository.OutboxRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.integration.channel.DirectChannel;
@@ -9,6 +10,7 @@ import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.MessageChannels;
 import org.springframework.integration.dsl.Pollers;
 import org.springframework.integration.handler.LoggingHandler;
+import org.springframework.integration.handler.advice.RequestHandlerRetryAdvice;
 import org.springframework.integration.jdbc.store.JdbcChannelMessageStore;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -19,11 +21,15 @@ import java.time.Duration;
 @Configuration
 public class MailConfiguration {
 	private final OutboxRepository outboxRepository;
+	private final RequestHandlerRetryAdvice retryAdvice;
 
-	public MailConfiguration(OutboxRepository outboxRepository) {
+	public MailConfiguration(
+			OutboxRepository outboxRepository,
+			@Qualifier("retryAdvice") RequestHandlerRetryAdvice retryAdvice
+	) {
 		this.outboxRepository = outboxRepository;
+		this.retryAdvice = retryAdvice;
 	}
-
 	@Bean
 	public DirectChannel inbox() {
 		return new DirectChannel();
@@ -65,16 +71,11 @@ public class MailConfiguration {
 						outboxRepository.updateStatus(messageId, "PROCESSED");	// 성공 시 상태 업데이트
 						System.out.println("메시지가 성공적으로 처리되었습니다" + messageId);
 					} catch (MailSendException e) {
-						// MailSendException 처리
-						outboxRepository.updateStatus(messageId, "FAILED");
-						System.out.println("메일 전송 에러 발생" + e.getMessage());
-					} catch (Exception e) {
-						// 기타 예외 처리
-						outboxRepository.updateStatus(messageId, "FAILED");
-						System.out.println("기타 에러 발생" + e.getMessage());
-						throw e; // 다른 처리 로직으로 예외 전달
-					}
-				}, e -> e.poller(Pollers.fixedDelay(Duration.ofSeconds(1)).transactional()))
+						System.out.println("메일 전송 에러 발생: " + e.getMessage());
+						// 재시도 실패 시만 상태 업데이트
+						throw new RuntimeException(e);					}
+				}, e -> e.advice(retryAdvice) // 재시도 로직 추가
+						.poller(Pollers.fixedDelay(Duration.ofSeconds(1)).transactional()))
 				.get();
 	}
 }
