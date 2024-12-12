@@ -1,10 +1,12 @@
 package com.springboot.springintegrationpostgresqlpushnotification.global.util.mail;
 
+import com.springboot.springintegrationpostgresqlpushnotification.domain.maillog.service.MailLogService;
 import com.springboot.springintegrationpostgresqlpushnotification.domain.notification.data.repository.OutboxRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.messaging.Message;
@@ -12,7 +14,6 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -27,8 +28,14 @@ public class MailFlowRetryTest {
 	@MockBean
 	private OutboxRepository outboxRepository;
 
+	@MockBean
+	private MailLogService mailLogService;
+
 	@Autowired
 	private MessageChannel inbox;
+
+	@Value("${MAIL_USERNAME}")
+	private String MAIL_USERNAME;
 
 	@Test
 	@DisplayName("Test if retries occur when email transmission fails")
@@ -85,6 +92,10 @@ public class MailFlowRetryTest {
 		// Then: 최종 상태 확인
 		verify(outboxRepository, times(1)).updateStatus(messageId, "PROCESSED");
 		verify(mailSender, times(1)).sendMail(testMail); // 한 번만 호출되어야 함
+
+		// 메일 로그 저장 검증
+		verify(mailLogService, times(1))
+				.saveMailLog(eq(MAIL_USERNAME), eq(testMail.to()), eq(testMail.subject()), eq(testMail.body()));
 	}
 
 }
